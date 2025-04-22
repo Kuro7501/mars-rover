@@ -12,23 +12,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate commit messages for emoji
+      - name: Validate commit messages for space emojis only
         shell: bash
         run: |
-          # fonction de validation : shortcode :name: ou emoji unicode
-          validate_commit_emojis() {
-            commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
-            # grep -E : soit :name: soit un caractère non-ASCII (emoji)
-            if echo "$commits" | grep -Eq '(:[a-z0-9_+-]+:|[^\x00-\x7F])'; then
-              return 0
-            else
-              echo "❌ Les messages suivants n’ont pas d’emoji spécial (format :name: ou unicode) :"
-              echo "$commits"
-              exit 1
-            fi
-          }
+          # récupère tous les messages de commit du push
+          commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
 
-          validate_commit_emojis
+          # regex autorisés : shortcodes ou unicode d'emojis spatiaux
+          allowed='(:rocket:|:milky_way:|:ufo:|:alien:|:satellite:|:star2:|🚀|🛰️|🛸|🌌|🌠|🌟|✨|🌙|☄️|🪐)'
+
+          # filtre les messages qui NE CONTIENNENT PAS un de ces emojis
+          invalid=$(echo "$commits" | grep -v -E "$allowed" || true)
+
+          if [ -n "$invalid" ]; then
+            echo "❌ Les messages suivants n’ont pas d’emoji spatial autorisé :"
+            echo "$invalid"
+            exit 1
+          fi
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
