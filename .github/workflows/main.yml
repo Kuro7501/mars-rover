@@ -15,17 +15,15 @@ jobs:
       - name: Validate commit messages for emoji
         shell: bash
         run: |
-          # forcer la locale en UTF-8 pour manipuler correctement les octets
-          export LC_ALL=en_US.UTF-8
-          export LANG=en_US.UTF-8
-
+          # fonction de validation : shortcode :name: ou emoji unicode
           validate_commit_emojis() {
             commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
-            # autorise :name: OU un caractère non-ASCII (la plupart des emojis)
-            invalid=$(echo "$commits" | grep -v -E '(:[a-z0-9_+-]+:|[^\x00-\x7F])')
-            if [ -n "$invalid" ]; then
-              echo "❌ Les messages suivants n’ont pas d’emoji spécial (format :name: ou unicode) :"
-              echo "$invalid"
+            # grep -E : soit :name: soit un caractère non-ASCII (emoji)
+            if echo "$commits" | grep -Eq '(:[a-z0-9_+-]+:|[^\x00-\x7F])'; then
+              return 0
+            else
+              echo "❌ Les messages suivants n’ont pas d’emoji spécial (format :name: ou unicode) :"
+              echo "$commits"
               exit 1
             fi
           }
