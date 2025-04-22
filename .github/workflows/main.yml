@@ -12,6 +12,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate commit messages for emoji
+        shell: bash
+        run: |
+          validate_commit_emojis() {
+            commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
+            invalid=$(echo "$commits" | grep -v -E ":[a-z0-9_+-]+:")
+            if [ -n "$invalid" ]; then
+              echo "❌ Les messages suivants n’ont pas d’emoji spécial (format :name:) :"
+              echo "$invalid"
+              exit 1
+            fi
+          }
+
+          validate_commit_emojis
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -26,4 +41,5 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Execute unit tests
-        run: dotnet test 
+        run: dotnet test
+
