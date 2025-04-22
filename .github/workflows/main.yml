@@ -42,4 +42,3 @@ jobs:
 
       - name: Execute unit tests
         run: dotnet test
-
