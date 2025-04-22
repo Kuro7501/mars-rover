@@ -16,16 +16,18 @@ jobs:
         shell: bash
         run: |
           validate_commit_emojis() {
-            commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
-            invalid=$(echo "$commits" | grep -v -E ":[a-z0-9_+-]+:")
+          commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
+          # autorise :name: OU un emoji unicode (\p{So})
+            invalid=$(echo "$commits" | grep -P -v '(:[a-z0-9_+-]+:|\p{So})')
             if [ -n "$invalid" ]; then
-              echo "❌ Les messages suivants n’ont pas d’emoji spécial (format :name:) :"
+              echo "❌ Les messages suivants n’ont pas d’emoji spécial (format :name: ou unicode) :"
               echo "$invalid"
-              exit 1
-            fi
+            exit 1
+          fi
           }
 
           validate_commit_emojis
+
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
