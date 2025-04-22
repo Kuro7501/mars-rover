@@ -15,19 +15,22 @@ jobs:
       - name: Validate commit messages for emoji
         shell: bash
         run: |
+          # forcer la locale en UTF-8 pour manipuler correctement les octets
+          export LC_ALL=en_US.UTF-8
+          export LANG=en_US.UTF-8
+
           validate_commit_emojis() {
-          commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
-          # autorise :name: OU un emoji unicode (\p{So})
-            invalid=$(echo "$commits" | grep -P -v '(:[a-z0-9_+-]+:|\p{So})')
+            commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
+            # autorise :name: OU un caractère non-ASCII (la plupart des emojis)
+            invalid=$(echo "$commits" | grep -v -E '(:[a-z0-9_+-]+:|[^\x00-\x7F])')
             if [ -n "$invalid" ]; then
               echo "❌ Les messages suivants n’ont pas d’emoji spécial (format :name: ou unicode) :"
               echo "$invalid"
-            exit 1
-          fi
+              exit 1
+            fi
           }
 
           validate_commit_emojis
-
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
